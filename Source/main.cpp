@@ -1,49 +1,9 @@
-#include <iostream>
-#include <cmath>
-#include "/home/archer/Projects/ArcherStandardLibrary/Source/Outputs.h"
+#include "ConfigParser.h"
 
-using namespace std;
-
-const int N = 500;
-
-const double startX = -2;
-const double startY = 1;
-const double startWidth = 3;
-const double startHeight = 2;
-const double endX = -0.85;
-const double endY = 0.25;
-const double endWidth = 0.3;
-const double endHeight = 0.2;
-
-const int imgW = 900;
-const int imgH = 600;
-const int numFrames = 100;
-const int startFrame = 0;
-
-const string FolderName = "Gif2/";
-
-const Color fillcolor = {0,0,0};
-const Color first = {0,255,255};
-const Color last = {255,0,255};
-/*
-const double startMinX = -2;
-const double startMaxX = 1;
-const double startMinY = -1;
-const double startMaxY = 1;
-const double endMinX = -2;
-const double endMaxX = 1;
-const double endMinY = -1;
-const double endMaxY = 1;
-const int imgW = 2000;
-const int imgH = 1000;
-const int numFrames = 1;
-
-const Color fillcolor = {0,0,0};
-const Color last = {0,255,255};
-const Color first = {255,0,255};
-*/
-
+const string defaultDataFile="fullGen.txt";
 const int K = 2;
+const int maxIterations = 500;
+const double interpolationExponent = 2;
 
 struct Complex{
     double a;
@@ -61,15 +21,11 @@ struct Complex{
     bool inbounds(){
         return (abs(a) < K) || (abs(b) < K);
     }
-
-    string toString(){
-        return to_string(a)+"+"+to_string(b)+"i";
-    }
 };
 
 int funct(Complex c){
     Complex n(0,0);
-    for(int i = 0; i < N; i++){
+    for(int i = 0; i < maxIterations; i++){
         n = (n.square() + c);
         if(!n.inbounds()){
             return i;
@@ -78,44 +34,49 @@ int funct(Complex c){
     return -1;
 }
 
+double interpolate(double n, double inmax, double a, double b){
+    return ((a-b)/pow(inmax,interpolationExponent))*pow(n-inmax,interpolationExponent) + b;
+}
+
 int main(int argc, char* argv[]){
+    Settings Conf(((argc>1)?argv[1]:defaultDataFile));
     Image img(0,0);
     double x, y;
     int j;
-    int pix[imgW][imgH];
+    int pix[Conf.imgW][Conf.imgH];
     int maxits;
     string txt;
-    for(int i = 0; i < numFrames; i++){
+    for(int i = 0; i < Conf.numFrames; i++){
         txt = to_string(i);
-        cout << pad(txt,to_string(numFrames).size(),' ',"right") << "/" << to_string(numFrames) << " ";
-        txt = to_string((int)((i*1.0/numFrames)*100));
+        cout << pad(txt,to_string(Conf.numFrames).size(),' ',"right") << "/" << to_string(Conf.numFrames) << " ";
+        txt = to_string((int)((i*1.0/Conf.numFrames)*100));
         cout << pad(txt,3,' ',"right") << "%";
         cout.flush();
         maxits = 0;
-        img = Image(imgW,imgH);
-        for(int pxy = 0; pxy < imgH; pxy++){
-            for(int pxx = 0; pxx < imgW; pxx++){
-                x = _compress(pxx,0,imgW,_compress(i,0,numFrames,startX,endX),_compress(i,0,numFrames,startX+startWidth,endX+endWidth));
-                y = _compress(pxy,0,imgH,_compress(i,0,numFrames,startY,endY),_compress(i,0,numFrames,startY-startHeight,endY-endHeight));
+        img = Image(Conf.imgW,Conf.imgH);
+        for(int pxy = 0; pxy < Conf.imgH; pxy++){
+            for(int pxx = 0; pxx < Conf.imgW; pxx++){
+                x = _compress(pxx,0,Conf.imgW,interpolate(i,Conf.numFrames-1,Conf.startX,Conf.endX),interpolate(i,Conf.numFrames-1,Conf.startX+Conf.startWidth,Conf.endX+Conf.endWidth));
+                y = _compress(pxy,0,Conf.imgH,interpolate(i,Conf.numFrames-1,Conf.startY,Conf.endY),interpolate(i,Conf.numFrames-1,Conf.startY-Conf.startHeight,Conf.endY-Conf.endHeight));
                 pix[pxx][pxy] = funct(Complex(x,y));
                 if(pix[pxx][pxy] > maxits){
                     maxits = pix[pxx][pxy];
                 }
             }
         }
-        for(int pxy = 0; pxy < imgH; pxy++){
-            for(int pxx = 0; pxx < imgW; pxx++){
+        for(int pxy = 0; pxy < Conf.imgH; pxy++){
+            for(int pxx = 0; pxx < Conf.imgW; pxx++){
                 if(pix[pxx][pxy] == -1){
-                    img(pxx,pxy) = fillcolor;
+                    img(pxx,pxy) = Conf.fillcolor;
                 }else{
-                    img(pxx,pxy) = Color::gradient(pix[pxx][pxy],0,maxits,firstcolor,lastcolor);
+                    img(pxx,pxy) = Color::gradient(pix[pxx][pxy],0,maxits,Conf.firstcolor,Conf.lastcolor);
                 }
             }
         }
-        for(int i = 0; i < (2*to_string(numFrames).size()) + 6; i++){
+        for(int i = 0; i < (2*to_string(Conf.numFrames).size()) + 6; i++){
             cout << "\b \b";
         }
-        img.savePPM(FolderName+"/"+to_string(startFrame+i)+".ppm");
+        img.savePPM(Conf.folderName+"/"+string(to_string(Conf.numFrames-1).size()-to_string(i).size(),'0')+to_string(i)+".ppm");
         //img.savePPM("full.ppm");
     }
     cout << "done\n";

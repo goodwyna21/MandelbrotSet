@@ -1,2 +1,4 @@
-main.o : Source/main.cpp
-	g++ -o main.o Source/main.cpp
+CXX=g++
+
+main: Source/main.cpp Source/ConfigParser.h
+	$(CXX) -o $@ $^

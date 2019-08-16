@@ -1,0 +1,26 @@
+#default data file
+#renders entire set
+startX=-2
+startY=1
+startWidth=3
+endX=-2
+endY=1
+zoomAmount=1
+
+imgW=900
+imgH=600
+numFrames=2
+
+folderName=.
+
+fillcolorR=0
+fillcolorG=0
+fillcolorB=0
+
+firstcolorR=0
+firstcolorG=255
+firstcolorB=255
+
+lastcolorR=255
+lastcolorG=0
+lastcolorB=255

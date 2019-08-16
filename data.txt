@@ -1,0 +1,27 @@
+#data file for rendering
+maxIterations=500
+
+startX=-2
+startY=1
+startWidth=3
+endX=-0.7506
+endY=0.0175
+zoomAmount=9000
+
+imgW=900
+imgH=600
+numFrames=100
+
+folderName=saves/valley
+
+fillcolorR=0
+fillcolorG=0
+fillcolorB=0
+
+firstcolorR=0
+firstcolorG=255
+firstcolorB=255
+
+lastcolorR=255
+lastcolorG=0
+lastcolorB=255
